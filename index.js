@@ -45,9 +45,12 @@ app.listen(port, () => {
   (async () => {
     let i = 0;
     while (true) {
+      const startTime = new Date().valueOf();
       console.log("Update loop", i++);
       await updateStats();
-      await sleep(60000);
+      const doneTime = new Date().valueOf();
+      const waitTime = Math.max(0, startTime - doneTime + 60000);
+      await sleep(waitTime);
     }
   })();
 });
