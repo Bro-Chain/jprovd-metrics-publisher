@@ -50,6 +50,7 @@ app.listen(port, () => {
       await updateStats();
       const doneTime = new Date().valueOf();
       const waitTime = Math.max(0, startTime - doneTime + 60000);
+      console.log(`Sleeping for ${Math.round(waitTime / 1000)} seconds...`);
       await sleep(waitTime);
     }
   })();
@@ -80,40 +81,38 @@ const updateStats = async () => {
       ]),
     ];
   } while (next_key);
-  await Promise.allSettled(
-    providers.map(async pod => {
-      const podName = pod.replace(/^https?:\/\//, "");
-      try {
-        console.log("Fetching balance from", podName);
-        await axios
-          .get(`${pod}/api/network/balance`)
-          .then(response => response.data.balance)
-          .then(balance =>
-            balanceGauge.set({ provider: podName }, parseInt(balance.amount))
-          )
-          .catch(() => {});
+  providers.map(pod => {
+    const podName = pod.replace(/^https?:\/\//, "");
+    try {
+      console.log("Fetching balance from", podName);
+      axios
+        .get(`${pod}/api/network/balance`, { timeout: 10000 })
+        .then(response => response.data.balance)
+        .then(balance =>
+          balanceGauge.set({ provider: podName }, parseInt(balance.amount))
+        )
+        .catch(() => {});
 
-        console.log("Fetching space from", podName);
-        await axios
-          .get(`${pod}/api/client/space`)
-          .then(response => response.data)
-          .then(space => {
-            spaceUsedGauge.set({ provider: podName }, space.used_space);
-            spaceTotalGauge.set({ provider: podName }, space.total_space);
-          })
-          .catch(() => {});
+      console.log("Fetching space from", podName);
+      axios
+        .get(`${pod}/api/client/space`, { timeout: 10000 })
+        .then(response => response.data)
+        .then(space => {
+          spaceUsedGauge.set({ provider: podName }, space.used_space);
+          spaceTotalGauge.set({ provider: podName }, space.total_space);
+        })
+        .catch(() => {});
 
-        console.log("Fetching files from", podName);
-        await axios
-          .get(`${pod}/api/client/list`)
-          .then(response => response.data.files)
-          .then(files =>
-            filesGauge.set({ provider: podName }, Math.floor(files.length / 2))
-          )
-          .catch(() => {});
-      } catch (e) {
-        console.log(e);
-      }
-    })
-  );
+      console.log("Fetching files from", podName);
+      axios
+        .get(`${pod}/api/client/list`, { timeout: 10000 })
+        .then(response => response.data.files)
+        .then(files =>
+          filesGauge.set({ provider: podName }, Math.floor(files.length / 2))
+        )
+        .catch(() => {});
+    } catch (e) {
+      console.log(e);
+    }
+  });
 };
