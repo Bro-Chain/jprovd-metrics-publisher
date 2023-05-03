@@ -56,14 +56,25 @@ const sleep = async millis =>
   new Promise(resolve => setTimeout(resolve, millis));
 
 const updateStats = async () => {
-  const providers = [
-    ...new Set(
-      await axios
-        .get(`${process.env.RPC}/jackal-dao/canine-chain/storage/providers`)
-        .then(response => response.data.providers)
-        .then(providers => providers.map(provider => provider.ip))
-    ),
-  ];
+  let next_key = null;
+  let providers = [];
+
+  do {
+    providers = [
+      ...new Set([
+        ...providers,
+        ...(await axios
+          .get(
+            `${process.env.RPC}/jackal-dao/canine-chain/storage/providers?pagination.key=${next_key}`
+          )
+          .then(response => {
+            next_key = response.data.pagination.next_key;
+            return response.data.providers;
+          })
+          .then(providers => providers.map(provider => provider.ip))),
+      ]),
+    ];
+  } while (next_key);
   await Promise.allSettled(
     providers.map(async pod => {
       const podName = pod.replace(/^https?:\/\//, "");
