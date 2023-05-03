@@ -91,7 +91,9 @@ const updateStats = async () => {
         .then(balance =>
           balanceGauge.set({ provider: podName }, parseInt(balance.amount))
         )
-        .catch(() => {});
+        .catch(e => {
+          console.log("Failed to get balance for", podName);
+        });
 
       console.log("Fetching space from", podName);
       axios
@@ -101,7 +103,9 @@ const updateStats = async () => {
           spaceUsedGauge.set({ provider: podName }, space.used_space);
           spaceTotalGauge.set({ provider: podName }, space.total_space);
         })
-        .catch(() => {});
+        .catch(e => {
+          console.log("Failed to get space for", podName);
+        });
 
       console.log("Fetching files from", podName);
       axios
@@ -110,7 +114,9 @@ const updateStats = async () => {
         .then(files =>
           filesGauge.set({ provider: podName }, Math.floor(files.length / 2))
         )
-        .catch(() => {});
+        .catch(e => {
+          console.log("Failed to get files for", podName);
+        });
     } catch (e) {
       console.log(e);
     }
