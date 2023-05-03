@@ -65,22 +65,22 @@ const updateStats = async () => {
 
   do {
     providers = [
-      ...new Set([
-        ...providers,
-        ...(await axios
-          .get(
-            `${process.env.RPC}/jackal-dao/canine-chain/storage/providers${
-              next_key ? `?pagination.key=${next_key}` : ""
-            }`
-          )
-          .then(response => {
-            next_key = response.data.pagination.next_key;
-            return response.data.providers;
-          })
-          .then(providers => providers.map(provider => provider.ip))),
-      ]),
+      ...providers,
+      ...(await axios
+        .get(
+          `${process.env.RPC}/jackal-dao/canine-chain/storage/providers${
+            next_key ? `?pagination.key=${next_key}` : ""
+          }`
+        )
+        .then(response => {
+          next_key = response.data.pagination.next_key;
+          return response.data.providers;
+        })
+        .then(providers => providers.map(provider => provider.ip))),
     ];
   } while (next_key);
+  providers = [...new Set(providers)];
+  console.log(`Polling ${providers.length} providers...`, providers);
   providers.map(pod => {
     const podName = pod.replace(/^https?:\/\//, "");
     try {
