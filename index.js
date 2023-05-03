@@ -80,45 +80,47 @@ const updateStats = async () => {
     ];
   } while (next_key);
   providers = [...new Set(providers)];
-  console.log(`Polling ${providers.length} providers...`, providers);
-  providers.map(pod => {
-    const podName = pod.replace(/^https?:\/\//, "");
-    try {
-      console.log("Fetching balance from", podName);
-      axios
-        .get(`${pod}/api/network/balance`, { timeout: 10000 })
-        .then(response => response.data.balance)
-        .then(balance =>
-          balanceGauge.set({ provider: podName }, parseInt(balance.amount))
-        )
-        .catch(e => {
-          console.log("Failed to get balance for", podName);
-        });
+  console.log(`Polling ${providers.length} providers...`);
+  await Promise.allSettled(
+    providers.map(async pod => {
+      const podName = pod.replace(/^https?:\/\//, "");
+      try {
+        console.log("Fetching balance from", podName);
+        await axios
+          .get(`${pod}/api/network/balance`, { timeout: 10000 })
+          .then(response => response.data.balance)
+          .then(balance =>
+            balanceGauge.set({ provider: podName }, parseInt(balance.amount))
+          )
+          .catch(e => {
+            console.log("Failed to get balance for", podName);
+          });
 
-      console.log("Fetching space from", podName);
-      axios
-        .get(`${pod}/api/client/space`, { timeout: 10000 })
-        .then(response => response.data)
-        .then(space => {
-          spaceUsedGauge.set({ provider: podName }, space.used_space);
-          spaceTotalGauge.set({ provider: podName }, space.total_space);
-        })
-        .catch(e => {
-          console.log("Failed to get space for", podName);
-        });
+        console.log("Fetching space from", podName);
+        await axios
+          .get(`${pod}/api/client/space`, { timeout: 10000 })
+          .then(response => response.data)
+          .then(space => {
+            spaceUsedGauge.set({ provider: podName }, space.used_space);
+            spaceTotalGauge.set({ provider: podName }, space.total_space);
+          })
+          .catch(e => {
+            console.log("Failed to get space for", podName);
+          });
 
-      console.log("Fetching files from", podName);
-      axios
-        .get(`${pod}/api/client/list`, { timeout: 10000 })
-        .then(response => response.data.files)
-        .then(files =>
-          filesGauge.set({ provider: podName }, Math.floor(files.length / 2))
-        )
-        .catch(e => {
-          console.log("Failed to get files for", podName);
-        });
-    } catch (e) {
-      console.log(e);
-    }
-  });
+        console.log("Fetching files from", podName);
+        await axios
+          .get(`${pod}/api/client/list`, { timeout: 10000 })
+          .then(response => response.data.files)
+          .then(files =>
+            filesGauge.set({ provider: podName }, Math.floor(files.length / 2))
+          )
+          .catch(e => {
+            console.log("Failed to get files for", podName);
+          });
+      } catch (e) {
+        console.log(e);
+      }
+    })
+  );
 };
