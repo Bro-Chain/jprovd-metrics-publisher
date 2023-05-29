@@ -77,7 +77,8 @@ const updateStats = async () => {
           next_key = response.data.pagination.next_key;
           return response.data.providers;
         })
-        .then(providers => providers.map(provider => provider.ip))),
+        .then(providers => providers.map(provider => provider.ip))
+        .catch(() => [])),
     ];
   } while (next_key);
   providers = [...new Set(providers)];
