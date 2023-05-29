@@ -71,7 +71,8 @@ const updateStats = async () => {
         .get(
           `${process.env.RPC}/jackal-dao/canine-chain/storage/providers${
             next_key ? `?pagination.key=${next_key}` : ""
-          }`
+          }`,
+          { timeout: 10000 }
         )
         .then(response => {
           next_key = response.data.pagination.next_key;
