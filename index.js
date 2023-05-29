@@ -7,6 +7,7 @@ const Registry = client.Registry;
 
 const app = express();
 const port = 3000;
+const loopDelay = 300000;
 
 const register = new Registry();
 const balanceGauge = new client.Gauge({
@@ -49,7 +50,7 @@ app.listen(port, () => {
       console.log("Update loop", i++);
       await updateStats();
       const doneTime = new Date().valueOf();
-      const waitTime = Math.max(0, startTime - doneTime + 60000);
+      const waitTime = Math.max(0, startTime - doneTime + loopDelay);
       console.log(`Sleeping for ${Math.round(waitTime / 1000)} seconds...`);
       await sleep(waitTime);
     }
@@ -89,8 +90,10 @@ const updateStats = async () => {
         await axios
           .get(`${pod}/api/network/balance`, { timeout: 10000 })
           .then(response => response.data.balance)
-          .then(balance =>
-            balanceGauge.set({ provider: podName }, parseInt(balance.amount))
+          .then(
+            balance =>
+              parseInt(balance.amount) &&
+              balanceGauge.set({ provider: podName }, parseInt(balance.amount))
           )
           .catch(e => {
             console.log("Failed to get balance for", podName);
@@ -101,8 +104,10 @@ const updateStats = async () => {
           .get(`${pod}/api/client/space`, { timeout: 10000 })
           .then(response => response.data)
           .then(space => {
-            spaceUsedGauge.set({ provider: podName }, space.used_space);
-            spaceTotalGauge.set({ provider: podName }, space.total_space);
+            space.used_space &&
+              spaceUsedGauge.set({ provider: podName }, space.used_space);
+            space.total_space &&
+              spaceTotalGauge.set({ provider: podName }, space.total_space);
           })
           .catch(e => {
             console.log("Failed to get space for", podName);
@@ -112,8 +117,13 @@ const updateStats = async () => {
         await axios
           .get(`${pod}/api/client/list`, { timeout: 10000 })
           .then(response => response.data.files)
-          .then(files =>
-            filesGauge.set({ provider: podName }, Math.floor(files.length / 2))
+          .then(
+            files =>
+              files.length &&
+              filesGauge.set(
+                { provider: podName },
+                Math.floor(files.length / 2)
+              )
           )
           .catch(e => {
             console.log("Failed to get files for", podName);
