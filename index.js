@@ -117,8 +117,8 @@ const updateStats = async () => {
 
         console.log("Fetching files from", podName);
         await axios
-          .get(`${pod}/api/client/list`, { timeout: 10000 })
-          .then(response => response.data.files)
+          .get(`${pod}/api/data/fids`, { timeout: 10000 })
+          .then(response => response.data.data)
           .then(
             files =>
               files.length &&
