@@ -103,7 +103,7 @@ const updateStats = async () => {
           });
 
         console.log("Fetching space from", podName);
-        spaceTotalGauge.set({ provider: podName }, provider.totalspace);
+        spaceTotalGauge.set({ provider: podName }, parseInt(provider.totalspace));
         let foundSpace = false;
         await axios
           .get(
