@@ -93,7 +93,7 @@ const updateStats = async () => {
         let foundBalance = false;
         await axios
           .get(
-            `https://api.jackalprotocol.com/cosmos/bank/v1beta1/balances/${rovider.address}`,
+            `https://api.jackalprotocol.com/cosmos/bank/v1beta1/balances/${provider.address}`,
             { timeout: 10000 }
           )
           .then(response => response.data.balances[0])
