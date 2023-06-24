@@ -78,14 +78,15 @@ const updateStats = async () => {
           next_key = response.data.pagination.next_key;
           return response.data.providers;
         })
-        .then(providers => providers.map(provider => provider.ip))
+        // .then(providers => providers.map(provider => provider.ip))
         .catch(() => [])),
     ];
   } while (next_key);
   providers = [...new Set(providers)];
   console.log(`Polling ${providers.length} providers...`);
   await Promise.allSettled(
-    providers.map(async pod => {
+    providers.map(async provider => {
+      const pod = provider.ip;
       const podName = pod.replace(/^https?:\/\//, "");
       try {
         console.log("Fetching balance from", podName);
@@ -102,19 +103,38 @@ const updateStats = async () => {
           });
 
         console.log("Fetching space from", podName);
+        spaceTotalGauge.set({ provider: podName }, provider.totalspace);
+        let foundSpace = false;
         await axios
-          .get(`${pod}/api/client/space`, { timeout: 10000 })
+          .get(
+            `https://api.jackalprotocol.com/jackal-dao/canine-chain/storage/freespace/${provider.address}`,
+            { timeout: 10000 }
+          )
           .then(response => response.data)
           .then(space => {
-            space.used_space &&
-              spaceUsedGauge.set({ provider: podName }, space.used_space);
-            space.total_space &&
-              spaceTotalGauge.set({ provider: podName }, space.total_space);
+            spaceUsedGauge.set(
+              { provider: podName },
+              parseInt(provider.totalspace) - parseInt(space.space)
+            );
+            foundSpace = true;
           })
           .catch(e => {
-            console.log("Failed to get space for", podName);
+            console.log("Failed to get space via API for", podName);
           });
-
+        if (!foundSpace) {
+          await axios
+            .get(`${pod}/api/client/space`, { timeout: 10000 })
+            .then(response => response.data)
+            .then(space => {
+              space.used_space &&
+                spaceUsedGauge.set({ provider: podName }, space.used_space);
+              space.total_space &&
+                spaceTotalGauge.set({ provider: podName }, space.total_space);
+            })
+            .catch(e => {
+              console.log("Failed to get space for", podName);
+            });
+        }
         console.log("Fetching files from", podName);
         await axios
           .get(`${pod}/api/data/fids`, { timeout: 10000 })
