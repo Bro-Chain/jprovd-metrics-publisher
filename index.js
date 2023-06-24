@@ -90,20 +90,45 @@ const updateStats = async () => {
       const podName = pod.replace(/^https?:\/\//, "");
       try {
         console.log("Fetching balance from", podName);
+        let foundBalance = false;
         await axios
-          .get(`${pod}/api/network/balance`, { timeout: 10000 })
-          .then(response => response.data.balance)
-          .then(
-            balance =>
-              parseInt(balance.amount) &&
-              balanceGauge.set({ provider: podName }, parseInt(balance.amount))
+          .get(
+            `https://api.jackalprotocol.com/cosmos/bank/v1beta1/balances/${rovider.address}`,
+            { timeout: 10000 }
           )
+          .then(response => response.data.balances[0])
+          .then(balance => {
+            if (parseInt(balance.amount)) {
+              balanceGauge.set({ provider: podName }, parseInt(balance.amount));
+              foundBalance = true;
+            }
+          })
           .catch(e => {
-            console.log("Failed to get balance for", podName);
+            console.log("Failed to get balance via API for", podName);
           });
 
+        if (!foundBalance) {
+          await axios
+            .get(`${pod}/api/network/balance`, { timeout: 10000 })
+            .then(response => response.data.balance)
+            .then(
+              balance =>
+                parseInt(balance.amount) &&
+                balanceGauge.set(
+                  { provider: podName },
+                  parseInt(balance.amount)
+                )
+            )
+            .catch(e => {
+              console.log("Failed to get balance for", podName);
+            });
+        }
+
         console.log("Fetching space from", podName);
-        spaceTotalGauge.set({ provider: podName }, parseInt(provider.totalspace));
+        spaceTotalGauge.set(
+          { provider: podName },
+          parseInt(provider.totalspace)
+        );
         let foundSpace = false;
         await axios
           .get(
