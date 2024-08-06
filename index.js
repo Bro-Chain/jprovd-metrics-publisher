@@ -69,7 +69,7 @@ const updateStats = async () => {
       ...providers,
       ...(await axios
         .get(
-          `${process.env.RPC}/jackal-dao/canine-chain/storage/providers${
+          `${process.env.RPC}/jackal/canine-chain/storage/providers${
             next_key ? `?pagination.key=${next_key}` : ""
           }`,
           { timeout: 10000 }
