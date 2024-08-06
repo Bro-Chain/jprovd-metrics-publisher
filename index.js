@@ -107,71 +107,65 @@ const updateStats = async () => {
             console.log("Failed to get balance via API for", podName);
           });
 
-        if (!foundBalance) {
-          await axios
-            .get(`${pod}/api/network/balance`, { timeout: 10000 })
-            .then(response => response.data.balance)
-            .then(
-              balance =>
-                parseInt(balance.amount) &&
-                balanceGauge.set(
-                  { provider: podName },
-                  parseInt(balance.amount)
-                )
-            )
-            .catch(e => {
-              console.log("Failed to get balance for", podName);
-            });
-        }
+        // if (!foundBalance) {
+        //   await axios
+        //     .get(`${pod}/api/network/balance`, { timeout: 10000 })
+        //     .then(response => response.data.balance)
+        //     .then(
+        //       balance =>
+        //         parseInt(balance.amount) &&
+        //         balanceGauge.set(
+        //           { provider: podName },
+        //           parseInt(balance.amount)
+        //         )
+        //     )
+        //     .catch(e => {
+        //       console.log("Failed to get balance for", podName);
+        //     });
+        // }
 
-        console.log("Fetching space from", podName);
-        spaceTotalGauge.set(
-          { provider: podName },
-          parseInt(provider.totalspace)
-        );
-        let foundSpace = false;
-        await axios
-          .get(
-            `https://api.jackalprotocol.com/jackal-dao/canine-chain/storage/freespace/${provider.address}`,
-            { timeout: 10000 }
-          )
-          .then(response => response.data)
-          .then(space => {
-            spaceUsedGauge.set(
-              { provider: podName },
-              parseInt(provider.totalspace) - parseInt(space.space)
-            );
-            foundSpace = true;
-          })
-          .catch(e => {
-            console.log("Failed to get space via API for", podName);
-          });
-        if (!foundSpace) {
-          await axios
-            .get(`${pod}/api/client/space`, { timeout: 10000 })
-            .then(response => response.data)
-            .then(space => {
-              space.used_space &&
-                spaceUsedGauge.set({ provider: podName }, space.used_space);
-              space.total_space &&
-                spaceTotalGauge.set({ provider: podName }, space.total_space);
-            })
-            .catch(e => {
-              console.log("Failed to get space for", podName);
-            });
-        }
+        // console.log("Fetching space from", podName);
+        // spaceTotalGauge.set(
+        //   { provider: podName },
+        //   parseInt(provider.totalspace)
+        // );
+        // let foundSpace = false;
+        // await axios
+        //   .get(
+        //     `https://api.jackalprotocol.com/jackal-dao/canine-chain/storage/freespace/${provider.address}`,
+        //     { timeout: 10000 }
+        //   )
+        //   .then(response => response.data)
+        //   .then(space => {
+        //     spaceUsedGauge.set(
+        //       { provider: podName },
+        //       parseInt(provider.totalspace) - parseInt(space.space)
+        //     );
+        //     foundSpace = true;
+        //   })
+        //   .catch(e => {
+        //     console.log("Failed to get space via API for", podName);
+        //   });
+        // if (!foundSpace) {
+        //   await axios
+        //     .get(`${pod}/api/client/space`, { timeout: 10000 })
+        //     .then(response => response.data)
+        //     .then(space => {
+        //       space.used_space &&
+        //         spaceUsedGauge.set({ provider: podName }, space.used_space);
+        //       space.total_space &&
+        //         spaceTotalGauge.set({ provider: podName }, space.total_space);
+        //     })
+        //     .catch(e => {
+        //       console.log("Failed to get space for", podName);
+        //     });
+        // }
+
         console.log("Fetching files from", podName);
         await axios
-          .get(`${pod}/api/data/fids`, { timeout: 10000 })
-          .then(response => response.data.data)
-          .then(
-            files =>
-              files.length &&
-              filesGauge.set(
-                { provider: podName },
-                Math.floor(files.length / 2)
-              )
-          )
+          .get(`${pod}/list`, { timeout: 10000 })
+          .then(response => response.data.count)
+          .then(files => filesGauge.set({ provider: podName }, files || 0))
           .catch(e => {
             console.log("Failed to get files for", podName);
           });
