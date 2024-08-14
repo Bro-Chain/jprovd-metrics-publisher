@@ -124,11 +124,11 @@ const updateStats = async () => {
         //     });
         // }
 
-        // console.log("Fetching space from", podName);
-        // spaceTotalGauge.set(
-        //   { provider: podName },
-        //   parseInt(provider.totalspace)
-        // );
+        console.log("Fetching space from", podName);
+        spaceTotalGauge.set(
+          { provider: podName },
+          parseInt(provider.totalspace)
+        );
         // let foundSpace = false;
         // await axios
         //   .get(
@@ -147,18 +147,18 @@ const updateStats = async () => {
         //     console.log("Failed to get space via API for", podName);
         //   });
         // if (!foundSpace) {
-        //   await axios
-        //     .get(`${pod}/api/client/space`, { timeout: 10000 })
-        //     .then(response => response.data)
-        //     .then(space => {
-        //       space.used_space &&
-        //         spaceUsedGauge.set({ provider: podName }, space.used_space);
-        //       space.total_space &&
-        //         spaceTotalGauge.set({ provider: podName }, space.total_space);
-        //     })
-        //     .catch(e => {
-        //       console.log("Failed to get space for", podName);
-        //     });
+          await axios
+            .get(`${pod}/api/client/space`, { timeout: 10000 })
+            .then(response => response.data)
+            .then(space => {
+              space.used_space &&
+                spaceUsedGauge.set({ provider: podName }, space.used_space);
+              space.total_space &&
+                spaceTotalGauge.set({ provider: podName }, space.total_space);
+            })
+            .catch(e => {
+              console.log("Failed to get space for", podName);
+            });
         // }
 
         console.log("Fetching files from", podName);
