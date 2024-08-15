@@ -84,8 +84,9 @@ const updateStats = async () => {
   } while (next_key);
   providers = [...new Set(providers)];
   console.log(`Polling ${providers.length} providers...`);
-  await Promise.allSettled(
-    providers.map(async provider => {
+  // await Promise.allSettled(
+  //   providers.map(async provider => {
+  for(let provider of providers) {
       const pod = provider.ip;
       const podName = pod.replace(/^https?:\/\//, "");
       try {
@@ -172,6 +173,7 @@ const updateStats = async () => {
       } catch (e) {
         console.log(e);
       }
-    })
-  );
+  }
+  //   })
+  // );
 };
